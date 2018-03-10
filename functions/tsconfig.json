@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "lib": ["es6"],
+    "lib": ["es6", "dom", "dom.iterable"],
     "module": "commonjs",
     "noImplicitReturns": true,
     "noEmitOnError": true,
     "strict": true,
-    "outDir": "lib",
-    "sourceMap": true,
-    "target": "es6"
+    "target": "es6",
+    "esModuleInterop": true,
+    "downlevelIteration": true
   },
   "compileOnSave": true,
   "include": [
-    "src"
+    "src",
+    "ml"
   ]
 }

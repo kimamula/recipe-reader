@@ -13,14 +13,14 @@
     "no-namespace": true,
 
     // Do not allow parameters to be reassigned. To avoid bugs, developers should instead assign new values to new vars.
-    "no-parameter-reassignment": true,
+//    "no-parameter-reassignment": true,
 
     // Force the use of ES6-style imports instead of /// <reference path=> imports.
     "no-reference": true,
 
     // Do not allow type assertions that do nothing. This is a big warning that the developer may not understand the
     // code currently being edited (they may be incorrectly handling a different type case that does not exist).
-    "no-unnecessary-type-assertion": true,
+//    "no-unnecessary-type-assertion": true,
 
     // Disallow nonsensical label usage.
     "label-position": true,
@@ -50,7 +50,7 @@
 
     // Functions must either be handled directly (e.g. with a catch() handler) or returned to another function.
     // This is a major source of errors in Cloud Functions and the team strongly recommends leaving this rule on.
-    "no-floating-promises": true,
+//    "no-floating-promises": true,
 
     // Do not allow any imports for modules that are not in package.json. These will almost certainly fail when
     // deployed.
@@ -69,7 +69,7 @@
     "no-use-before-declare": true,
 
     // Expressions must always return a value. Avoids common errors like const myValue = functionReturningVoid();
-    "no-void-expression": [true, "ignore-arrow-function-shorthand"],
+//    "no-void-expression": [true, "ignore-arrow-function-shorthand"],
 
     // Disallow duplicate imports in the same file.
     "no-duplicate-imports": true,

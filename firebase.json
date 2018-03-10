@@ -3,6 +3,14 @@
     "predeploy": [
       "npm --prefix $RESOURCE_DIR run lint",
       "npm --prefix $RESOURCE_DIR run build"
+    ],
+    "ignore": [
+      "recipes/**",
+      "**/node_modules/**",
+      "ml/data/keras-log/**",
+      "ml/data/procedure-learning-data-input.json",
+      "ml/data/procedure-learning-data-output.json",
+      "ml/data/procedure-model.h5"
     ]
   }
 }

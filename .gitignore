@@ -1,2 +1,7 @@
 node_modules
-functions/lib
+functions/recipes/**
+!functions/recipes/.gitkeep
+functions/ml/data/procedure-learning-data-input.json
+functions/ml/data/procedure-learning-data-output.json
+*.js
+.python-version
