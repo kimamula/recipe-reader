@@ -29,8 +29,6 @@ x_test = np.array(x_test)
 model = Sequential()
 model.add(Dense(32, input_dim=102, activation='relu'))
 model.add(Dropout(0.5))
-model.add(Dense(32, activation='relu'))
-model.add(Dropout(0.5))
 model.add(Dense(1, activation='sigmoid'))
 
 model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])

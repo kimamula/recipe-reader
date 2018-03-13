@@ -30,7 +30,7 @@ Promise
         for (const file of files) {
           const html = await new Promise<string>((resolve, reject) => fs.readFile(file, 'utf8', (err, data) => err ? reject(err) : resolve(data)));
           const document = new JSDOM(html).window.document;
-          document.querySelectorAll('style, script, noscript').forEach(s => s.remove());
+          document.querySelectorAll('style, script, noscript, img').forEach(s => s.remove());
           const result = await infer(tokenizer, word2VecModel, kerasModelWrapper, document, materialVector, materialStat);
           const expectation = {
             materials: Array.from(document.querySelectorAll(siteData.materials)).reduce((acc, material) => {
@@ -54,7 +54,7 @@ Promise
       .then(res => res.ok ? res.text() : Promise.reject(res))
       .then(html => {
         const document = new JSDOM(html).window.document;
-        document.querySelectorAll('style, script, noscript').forEach(s => s.remove());
+        document.querySelectorAll('style, script, noscript, img').forEach(s => s.remove());
         return infer(tokenizer, word2VecModel, kerasModelWrapper, document, materialVector, materialStat);
       })
       .then(result => console.log(result))

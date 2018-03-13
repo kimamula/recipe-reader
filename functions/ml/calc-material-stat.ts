@@ -55,7 +55,7 @@ Promise.all([createKuromojiTokenizer(), loadWord2vecModel()]).then(([tokenizer, 
         return reject(err);
       }
       const document = new JSDOM(data).window.document;
-      document.querySelectorAll('style, script, noscript').forEach(s => s.remove());
+      document.querySelectorAll('style, script, noscript, img').forEach(s => s.remove());
       const materials = Array.from(document.querySelectorAll(siteData.materials));
       const correct = materials.reduce((acc, material) => {
         material.remove();

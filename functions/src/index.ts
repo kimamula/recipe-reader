@@ -66,13 +66,17 @@ export function executeFetch(app: App): any {
     return app.ask('URL は HTTP または HTTPS から入力してください。');
   }
   const path = app.getArgument(PATH_ARGUMENT) as any;
+  _fetch(app, `${url}/${path}`);
+}
+function _fetch(app: App, url: string): any {
   const fetchFunc: typeof fetch = require('node-fetch');
-  fetchFunc(`${url}/${path}`, { redirect: 'manual' })
+  fetchFunc(url, { redirect: 'manual' })
     .then(res => res.ok ? res.text() : Promise.reject(res))
     .then(html => {
       const { JSDOM } = require('jsdom');
       const document: Document = new JSDOM(html).window.document;
-      app.setContext(RECIPE_CONTEXT_NAME, 1, { [CONTEXT_ARGUMENT_HTML]: html });
+      document.querySelectorAll('style, script, noscript, img').forEach(s => s.remove());
+      app.setContext(RECIPE_CONTEXT_NAME, 1, { [CONTEXT_ARGUMENT_HTML]: document.body.outerHTML });
       app.ask(`「${document.title}」からレシピ情報を読み込みます。よろしいですか？`);
     })
     .catch(err => {
@@ -107,7 +111,6 @@ export function executeInfer(app: App): any {
       new Promise<Document>(resolve => {
         const { JSDOM } = require('jsdom');
         const document: Document = new JSDOM(html).window.document;
-        document.querySelectorAll('style, script, noscript').forEach(s => s.remove());
         resolve(document);
       }),
     ])
@@ -175,13 +178,17 @@ export function longestCommonSubstringRatio(s1: string, s2: string): number {
 }
 
 export function material(app: App): void {
+  const materialName = app.getArgument(MATERIAL_NAME_ARGUMENT) as any;
+  if (urlRegex.test(materialName)) {
+    // as the input for the material input is set to @sys.any, sometimes URL is wrongly navigated.
+    return _fetch(app, materialName);
+  }
   const recipeContext = app.getContext(RECIPE_CONTEXT_NAME) as any;
   if (!recipeContext || !recipeContext.parameters[CONTEXT_ARGUMENT_MATERIALS]) {
     app.ask(REQUEST_RECIPE_URL_MESSAGE);
     return;
   }
   const materials = recipeContext.parameters[CONTEXT_ARGUMENT_MATERIALS] as { [key: string]: string; };
-  const materialName = app.getArgument(MATERIAL_NAME_ARGUMENT) as any;
   if (materialName) {
     getMaterialQuantity(materials, materialName, longestCommonSubstringRatio)
       .then(quantity => {

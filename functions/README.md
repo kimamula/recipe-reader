@@ -50,7 +50,7 @@ Calculates statistics of words used as materials.
 
 Creates learning data for procedures from the recipe sites' HTML.
 
-### `ml/learn-procuder.py`
+### `ml/learn-procedure.py`
 
 Executes deep learning on data created by `ml/create-learning-data-for-procedures.ts`.
 

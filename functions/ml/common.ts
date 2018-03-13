@@ -1,5 +1,6 @@
 import * as path from 'path';
 import kuromoji, { IpadicFeatures, Tokenizer } from 'kuromoji';
+import { performance } from 'perf_hooks';
 
 const startsWithNumberRegex = /^\d/;
 const tokenizeInterruptionNumberTarget = /^\d+$/;
@@ -362,7 +363,7 @@ export async function inferMaterialsAndProcedures(
         pairs: nodeDataList.reduce((acc, { materialSimilarity }) =>
           ({ ...acc, ...materialSimilarity.listOfPairs.pairs })
         , {} as { [name: string]: string; })
-      }
+      };
   }
 
   return visitNode(document.body).then(() => ({ materials, procedures }));

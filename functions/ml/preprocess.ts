@@ -26,7 +26,7 @@ Object.keys(allSiteData).forEach(siteName => {
           return reject(err);
         }
         const dom = new JSDOM(data);
-        dom.window.document.querySelectorAll('style, script, noscript').forEach(s => s.remove());
+        dom.window.document.querySelectorAll('style, script, noscript, img').forEach(s => s.remove());
         dom.window.document.querySelectorAll(siteData.materials).forEach(material => {
           const { name, quantity } = getMaterialsNameAndQuantity(material, siteData);
           name && quantity && (material.textContent = `使用する${name}の量は${quantity}です。`.replace(/\n/, ''));
