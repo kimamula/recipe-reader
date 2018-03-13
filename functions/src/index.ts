@@ -66,7 +66,7 @@ export function executeFetch(app: App): any {
     return app.ask('URL は HTTP または HTTPS から入力してください。');
   }
   const path = app.getArgument(PATH_ARGUMENT) as any;
-  _fetch(app, `${url}/${path}`);
+  _fetch(app, `${url}/${path || ''}`);
 }
 function _fetch(app: App, url: string): any {
   const fetchFunc: typeof fetch = require('node-fetch');
