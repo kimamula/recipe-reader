@@ -27,8 +27,8 @@ const CONTEXT_ARGUMENT_MATERIALS = 'materials';
 const CONTEXT_ARGUMENT_PROCEDURES = 'procedures';
 const CONTEXT_ARGUMENT_CURRENT_PROCEDURE = 'currentProcedure';
 
-const REQUEST_RECIPE_URL_MESSAGE = 'はじめにレシピのURLを入力して情報を抽出してください。';
-const CANCEL_MESSAGE = 'キャンセルしました。再度のURLを入力してください。';
+const REQUEST_RECIPE_URL_MESSAGE = 'はじめにレシピのURLを入力してください。';
+const CANCEL_MESSAGE = 'キャンセルしました。再度レシピのURLを入力してください。';
 
 exports.recipeReader = functions.https.onRequest((request, response) => {
   const app = new App({request, response});
@@ -70,8 +70,8 @@ export function executeFetch(app: App): any {
 }
 function _fetch(app: App, url: string): any {
   const fetchFunc: typeof fetch = require('node-fetch');
-  fetchFunc(url, { redirect: 'manual' })
-    .then(res => res.ok ? res.text() : Promise.reject(res))
+  fetchFunc(url, { redirect: 'follow' })
+    .then(res => res.ok ? res.text() : res.text().then(text => console.error(res.statusText, text)) && Promise.reject(res))
     .then(html => {
       const { JSDOM } = require('jsdom');
       const document: Document = new JSDOM(html).window.document;
