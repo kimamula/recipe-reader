@@ -18,9 +18,9 @@ $ pip install -r requirements.txt
 
 ## Scripts
 
-### `src/index.ts`
+The scripts should be used in the following order. The names of the scripts are written with original extensions (`*.ts`), though of course they should be executed like `$ node foo.js`.
 
-App's entry point.
+The results of the script is stored under [`recipes`](recipes) (data which contain original sites' data and therefore should not be uploaded to GitHub) or [`ml/data`](ml/data) (data which do not contain original sites' data) dir.
 
 ### `ml/collect.ts`
 
@@ -28,7 +28,7 @@ Collects HTML from recipe sites.
 
 ### `ml/preprocess.ts`
 
-Preprocesses HTML for efficient learning.
+Preprocesses the collected HTML for efficient learning.
 
 ### `ml/kuromoji.ts`
 
@@ -57,6 +57,12 @@ Executes deep learning on data created by `ml/create-learning-data-for-procedure
 ### `node_modules/keras-js/python/encoder.py`
 
 Converts saved leaning data of `ml/learn-procuder.py` so that it can be handled with JS.
+
+## misc
+
+### `src/index.ts`
+
+App's entry point.
 
 ### `ml/*-check.ts`
 
