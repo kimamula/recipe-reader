@@ -4,4 +4,5 @@ functions/recipes/**
 functions/ml/data/procedure-learning-data-input.json
 functions/ml/data/procedure-learning-data-output.json
 *.js
+!functions/license.js
 .python-version
