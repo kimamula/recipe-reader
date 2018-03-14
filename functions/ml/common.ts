@@ -135,13 +135,13 @@ export function normalizeString(str: string): string {
       }
       return match;
     })
-    .replace(/([A-Z]+)|([^ ] *)([:…])( *[^ ])/g, (match, $1?: string, $2?: string, $3?: string, $4?: string) => {
+    .replace(/([A-Z]+)|(\S\s*|^\s*)[:…](\s*\S|\s*$)/g, (match, $1?: string, $2?: string, $3?: string) => {
       if ($1) {
         return $1.toLowerCase();
       }
-      if ($2 && $3 && $4) {
+      if (typeof $2 === 'string' && typeof $3 === 'string') {
         // remove delimiter-like symbol as it may appear between material name and quantity and interrupt inferring
-        return $2.match(/\d/) && $4.match(/\d/) ? match : $2 + $4;
+        return /\d/.test($2) && /\d/.test($3) ? match : $2 + $3;
       }
       return match;
     });
@@ -309,7 +309,7 @@ export async function inferMaterialsAndProcedures(
       return { score: name + quantity - 1, name: name >= quantity ? textContent : '', quantity: name >= quantity ? '' : textContent };
     }
     let boundaryIndex = -1;
-    let score = Number.NEGATIVE_INFINITY, name = '', quantity = '';
+    let simpleSum = Number.NEGATIVE_INFINITY, score = Number.NEGATIVE_INFINITY, name = '', quantity = '';
     for (let i = 1; i < length; i++) {
       let nameScore = 0, nameCount = 0, quantityScore = 0, quantityCount = 0;
       for (let j = 0; j < length; j++) {
@@ -322,8 +322,11 @@ export async function inferMaterialsAndProcedures(
           quantityCount += count;
         }
       }
+      const _simpleSum = nameScore + quantityScore;
       const _score = (nameScore / nameCount) + (quantityScore / quantityCount);
-      if (_score > score) {
+      // Compare simple sum as otherwise a word which is more similar to material name is used as material quantity (and vice versa) in some situation.
+      if (_simpleSum > simpleSum) {
+        simpleSum = _simpleSum;
         score = _score;
         boundaryIndex = i;
       }

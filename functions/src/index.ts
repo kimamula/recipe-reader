@@ -192,13 +192,13 @@ export function material(app: App): void {
   if (materialName) {
     getMaterialQuantity(materials, materialName, longestCommonSubstringRatio)
       .then(quantity => {
-        if (typeof quantity === 'undefined') {
-          app.ask(`申し訳ございません、${materialName}を材料から見つけることができませんでした。`);
-        } else {
+        if (quantity) {
           app.setContext(RECIPE_CONTEXT_NAME, RECIPE_CONTEXT_LIFESPAN, {
             [CONTEXT_ARGUMENT_MATERIALS]: { ...materials, materialName: quantity }
           });
           app.ask(quantity);
+        } else {
+          app.ask(`${materialName}は材料に存在しないか、対応する使用量の情報がありません。`);
         }
       });
   } else {

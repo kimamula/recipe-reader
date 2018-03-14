@@ -24,6 +24,7 @@ describe('normalizeString', () => {
     { input: '冷た〜い～温か〜い！', expectation: '冷た〜い~温か〜い!' },
     { input: '1　: ２の比率で', expectation: '1 : 2の比率で' },
     { input: '醤油：　大さじ１', expectation: '醤油 大さじ1' },
+    { input: '…120g', expectation: '120g' },
   ];
   it('should normalize string as expected', () => testCases.forEach(({ input, expectation }) =>
     expect(normalizeString(input)).toBe(expectation)
