@@ -1,0 +1,28 @@
+{
+  "dense_1/bias:0": {
+    "filename": "dense_1_bias_0",
+    "shape": [
+      32
+    ]
+  },
+  "dense_1/kernel:0": {
+    "filename": "dense_1_kernel_0",
+    "shape": [
+      102,
+      32
+    ]
+  },
+  "dense_2/bias:0": {
+    "filename": "dense_2_bias_0",
+    "shape": [
+      1
+    ]
+  },
+  "dense_2/kernel:0": {
+    "filename": "dense_2_kernel_0",
+    "shape": [
+      32,
+      1
+    ]
+  }
+}

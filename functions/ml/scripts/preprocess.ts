@@ -1,15 +1,15 @@
 import { JSDOM } from 'jsdom';
 import fs from 'fs';
 import path from 'path';
-import { allSiteData, getMaterialsNameAndQuantity } from './site-data';
+import { allSiteData, getMaterialsNameAndQuantity } from '../lib/site-data';
 import glob from 'glob';
-import { normalizeString } from './common';
+import { normalizeString } from '../lib/normalize';
 
 /**
  * Convert recipe html to text by calling `document.body.textContent`.
  */
 
-const recipesDir = path.resolve(__dirname, '..', 'recipes');
+const recipesDir = path.resolve(__dirname, '../../recipes');
 
 Object.keys(allSiteData).forEach(siteName => {
   const recipesDirForSite = path.resolve(recipesDir, siteName);

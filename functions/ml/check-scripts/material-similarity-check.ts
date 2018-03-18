@@ -1,7 +1,11 @@
-import { calcMaterialScore, createKuromojiTokenizer, getVector, loadWord2vecModel, normalizeString, truthyFilter } from './common';
+import { createKuromojiTokenizer } from '../lib/kuromoji';
+import { getVector, loadWord2vecModel } from '../lib/word2vec';
+import { normalizeString } from '../lib/normalize';
+import { truthyFilter } from '../lib/util';
+import { calcMaterialScore } from '../lib/infer';
 
-const materialStat = require('./data/material-stat.json') as { [key in 'name' | 'quantity']: { [label in 'correct' | 'others']: { avg: number; sd: number; }; }; };
-const materialVector = require('./data/material-vector.json') as { [key in 'name' | 'quantity']: number[]; };
+const materialStat = require('../data/material-stat.json') as { [key in 'name' | 'quantity']: { [label in 'correct' | 'others']: { avg: number; sd: number; }; }; };
+const materialVector = require('../data/material-vector.json') as { [key in 'name' | 'quantity']: number[]; };
 
 const word = process.argv[2];
 

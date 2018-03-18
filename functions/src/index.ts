@@ -1,6 +1,10 @@
 import * as functions from 'firebase-functions';
 import { DialogflowApp as App } from 'actions-on-google';
-import { createKuromojiTokenizer, infer, KerasModelWrapper, loadWord2vecModel } from '../ml/common';
+import { NodeCheckpointLoader } from '../ml/lib/node_checkpoint_loader';
+import { createKuromojiTokenizer } from '../ml/lib/kuromoji';
+import { loadWord2vecModel } from '../ml/lib/word2vec';
+import { DeeplearnModel } from '../ml/lib/deeplearn';
+import { infer } from '../ml/lib/infer';
 
 process.env.DEBUG = 'actions-on-google:*';
 
@@ -103,19 +107,15 @@ export function executeInfer(app: App): any {
     .all([
       createKuromojiTokenizer(),
       loadWord2vecModel(),
-      new Promise<KerasModelWrapper>(resolve => {
-        const KerasJS = require('keras-js');
-        const kerasModelWrapper = new KerasModelWrapper(new KerasJS.Model({ filepath: './ml/data/procedure-model.bin', filesystem: true }));
-        kerasModelWrapper.ready().then(() => resolve(kerasModelWrapper));
-      }),
+      DeeplearnModel.getInstance(new NodeCheckpointLoader('./ml/data/procedure-model/manifest.json')),
       new Promise<Document>(resolve => {
         const { JSDOM } = require('jsdom');
         const document: Document = new JSDOM(html).window.document;
         resolve(document);
       }),
     ])
-    .then(([tokenizer, word2VecModel, kerasModelWrapper, document]) =>
-      infer(tokenizer, word2VecModel, kerasModelWrapper, document, materialVector, materialStat)
+    .then(([tokenizer, word2VecModel, deeplearnModel, document]) =>
+      infer(tokenizer, word2VecModel, deeplearnModel, document, materialVector, materialStat)
         .then(({ materials, procedures }) => {
           app.setContext(RECIPE_CONTEXT_NAME, RECIPE_CONTEXT_LIFESPAN, {
             [CONTEXT_ARGUMENT_MATERIALS]: materials,

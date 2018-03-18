@@ -1,16 +1,13 @@
-import { allSiteData, getMaterialsNameAndQuantity, SiteData } from './site-data';
+import { allSiteData, getMaterialsNameAndQuantity, SiteData } from '../lib/site-data';
 import { JSDOM } from 'jsdom';
 import path from 'path';
 import glob from 'glob';
 import fs from 'fs';
-import {
-  createKuromojiTokenizer,
-  loadWord2vecModel,
-  calcSimilarity,
-  normalizeString
-} from './common';
+import { createKuromojiTokenizer } from '../lib/kuromoji';
+import { calcSimilarity, loadWord2vecModel } from '../lib/word2vec';
+import { normalizeString } from '../lib/normalize';
 
-const materialVector = require('./data/material-vector.json') as { name: number[]; quantity: number[]; };
+const materialVector = require('../data/material-vector.json') as { name: number[]; quantity: number[]; };
 let correctNameAcc = { sum: 0, squaredSum: 0, count: 0 };
 let correctQuantityAcc = Object.assign({}, correctNameAcc);
 let othersNameAcc = Object.assign({}, correctNameAcc);
@@ -74,7 +71,7 @@ Promise.all([createKuromojiTokenizer(), loadWord2vecModel()]).then(([tokenizer, 
   }
   return Promise
     .all(Object.keys(allSiteData).map(siteName => new Promise((resolve, reject) =>
-      glob(`${path.resolve(__dirname, '..', 'recipes', siteName)}/*.html`, async (err, files) => {
+      glob(`${path.resolve(__dirname, '../../recipes', siteName)}/*.html`, async (err, files) => {
         if (err) {
           return reject(err);
         }
@@ -92,7 +89,7 @@ Promise.all([createKuromojiTokenizer(), loadWord2vecModel()]).then(([tokenizer, 
       })
     )))
     .then(() => new Promise((resolve, reject) =>
-      fs.writeFile(path.resolve(__dirname, 'data', 'material-stat.json'), JSON.stringify({
+      fs.writeFile(path.resolve(__dirname, '../data/material-stat.json'), JSON.stringify({
         name: {
           correct: createStatData(correctNameAcc),
           others: createStatData(othersNameAcc)

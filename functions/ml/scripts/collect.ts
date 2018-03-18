@@ -1,13 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
-import { allSiteData } from './site-data';
+import { allSiteData } from '../lib/site-data';
 
 /**
  * Collect recipes from sites specified in site-data.json.
  */
 
-const recipesDir = path.resolve(__dirname, '..', 'recipes');
+const recipesDir = path.resolve(__dirname, '../../recipes');
 const maximumRecipeCountPerSite = 10000;
 
 fs.mkdir(recipesDir, () => {

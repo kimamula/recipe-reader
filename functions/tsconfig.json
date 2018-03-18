@@ -7,11 +7,13 @@
     "strict": true,
     "target": "es6",
     "esModuleInterop": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "strictPropertyInitialization": false
   },
   "compileOnSave": true,
   "include": [
     "src",
-    "ml"
+    "ml",
+    "typings"
   ]
 }

@@ -1,11 +1,11 @@
-import { allSiteData } from './site-data';
+import { allSiteData } from '../lib/site-data';
 import glob from 'glob';
 import path from 'path';
 import fs from 'fs';
 import readline from 'readline';
-import { createKuromojiTokenizer, TokenizerWrapper } from './common';
+import { createKuromojiTokenizer, TokenizerWrapper } from '../lib/kuromoji';
 
-const recipesDir = path.resolve(__dirname, '..', 'recipes');
+const recipesDir = path.resolve(__dirname, '../../recipes');
 
 createKuromojiTokenizer().then(tokenizer => {
   const writeStream = fs.createWriteStream(path.resolve(recipesDir, 'kuromojied.txt'), 'utf8');

@@ -1,4 +1,4 @@
-import { loadWord2vecModel } from './common';
+import { loadWord2vecModel } from '../lib/word2vec';
 
 const word = process.argv[2];
 
