@@ -5,6 +5,9 @@ export interface SiteDataBase {
   to: number;
   materials: string;
   procedures: string;
+  /**
+   * if the procedures consist of elements for number and description
+   */
   proceduresChildren?: {
     num: string;
     desc: string;
@@ -23,7 +26,7 @@ export type SiteDataMaterialNameAndQuantityInSeparateDOM = SiteDataBase & {
 
 export type SiteData = SiteDataMaterialNameAndQuantityInSingleDOM | SiteDataMaterialNameAndQuantityInSeparateDOM;
 
-export const allSiteData = require('../recipes/site-data.json') as { [siteName: string]: SiteData; };
+export const allSiteData = require('../../recipes/site-data.json') as { [siteName: string]: SiteData; };
 
 export function materialsNameAndQuantityInSingleDOM(data: SiteData): data is SiteDataMaterialNameAndQuantityInSingleDOM {
   return !!(data as any).materialsDelimiter;

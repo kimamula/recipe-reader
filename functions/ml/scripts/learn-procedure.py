@@ -36,7 +36,7 @@ model.add(tf.keras.layers.Dropout(0.5))
 model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
 
 model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
-tb = tf.keras.callbacks.TensorBoard(log_dir='./data/tf-log', histogram_freq=0, write_graph=True, write_images=True)
+tb = tf.keras.callbacks.TensorBoard(log_dir='../data/tf-log', histogram_freq=0, write_graph=True, write_images=True)
 
 history = model.fit(x_train, y_train, epochs=40, batch_size=128, validation_data=(x_val, y_val), callbacks=[tb])
 score = model.evaluate(x_test, y_test)

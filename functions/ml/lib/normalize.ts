@@ -32,13 +32,16 @@ export function normalizeString(str: string): string {
       }
       return match;
     })
-    .replace(/([A-Z]+)|(\S\s*|^\s*)[:…](\s*\S|\s*$)/g, (match, $1?: string, $2?: string, $3?: string) => {
+    .replace(/([A-Z]+)/g, (match, $1?: string) => {
       if ($1) {
         return $1.toLowerCase();
       }
-      if (typeof $2 === 'string' && typeof $3 === 'string') {
+      return match;
+    })
+    .replace(/(\S\s*|^\s*)[:…](\s*\S|\s*$)/g, (match, $1?: string, $2?: string) => {
+      if (typeof $1 === 'string' && typeof $2 === 'string') {
         // remove delimiter-like symbol as it may appear between material name and quantity and interrupt inferring
-        return /\d/.test($2) && /\d/.test($3) ? match : $2 + $3;
+        return /\d/.test($1) && /\d/.test($2) ? match : $1 + $2;
       }
       return match;
     });

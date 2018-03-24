@@ -1,9 +1,7 @@
 import * as functions from 'firebase-functions';
 import { DialogflowApp as App } from 'actions-on-google';
-import { NodeCheckpointLoader } from '../ml/lib/node_checkpoint_loader';
 import { createKuromojiTokenizer } from '../ml/lib/kuromoji';
 import { loadWord2vecModel } from '../ml/lib/word2vec';
-import { DeeplearnModel } from '../ml/lib/deeplearn';
 import { infer } from '../ml/lib/infer';
 
 process.env.DEBUG = 'actions-on-google:*';
@@ -101,13 +99,15 @@ export function executeInfer(app: App): any {
     return;
   }
   const html = recipeContext.parameters[CONTEXT_ARGUMENT_HTML] as string;
-  const materialStat = require('../ml/data/material-stat.json') as { [key in 'name' | 'quantity']: { [label in 'correct' | 'others']: { avg: number; sd: number; }; }; };
+  const materialStat = require('../ml/data/material-stat.json') as { [key in 'name' | 'quantity']: { [label in 'correct' | 'others' | 'wordCounts']: { avg: number; sd: number; }; }; };
   const materialVector = require('../ml/data/material-vector.json') as { [key in 'name' | 'quantity']: number[]; };
+  const { NodeCheckpointLoader } = require('../ml/lib/node-checkpoint-loader');
+  const { DeeplearnModel } = require('../ml/lib/deeplearn');
   Promise
     .all([
       createKuromojiTokenizer(),
       loadWord2vecModel(),
-      DeeplearnModel.getInstance(new NodeCheckpointLoader('./ml/data/procedure-model/manifest.json')),
+      DeeplearnModel.getInstance(new NodeCheckpointLoader('./ml/data/procedure-model')),
       new Promise<Document>(resolve => {
         const { JSDOM } = require('jsdom');
         const document: Document = new JSDOM(html).window.document;

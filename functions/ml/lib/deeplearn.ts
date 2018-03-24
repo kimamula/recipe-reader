@@ -1,4 +1,4 @@
-import { NodeCheckpointLoader } from './node_checkpoint_loader';
+import { NodeCheckpointLoader } from './node-checkpoint-loader';
 import { ENV, Tensor1D, Tensor2D } from 'deeplearn';
 
 export interface DeeplearnModel {

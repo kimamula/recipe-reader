@@ -4,13 +4,13 @@ import fs from 'fs';
 import glob from 'glob';
 import { allSiteData, getMaterialsNameAndQuantity } from '../lib/site-data';
 import fetch from 'node-fetch';
-import { NodeCheckpointLoader } from '../lib/node_checkpoint_loader';
+import { NodeCheckpointLoader } from '../lib/node-checkpoint-loader';
 import { createKuromojiTokenizer } from '../lib/kuromoji';
 import { loadWord2vecModel } from '../lib/word2vec';
 import { DeeplearnModel } from '../lib/deeplearn';
 import { infer } from '../lib/infer';
 
-const materialStat = require('../data/material-stat.json') as { [key in 'name' | 'quantity']: { [label in 'correct' | 'others']: { avg: number; sd: number; }; }; };
+const materialStat = require('../data/material-stat.json') as { [key in 'name' | 'quantity']: { [label in 'correct' | 'others' | 'wordCounts']: { avg: number; sd: number; }; }; };
 const materialVector = require('../data/material-vector.json') as { [key in 'name' | 'quantity']: number[]; };
 
 const siteNameOrURL = process.argv[2];
@@ -19,7 +19,7 @@ const count = Number(process.argv[3]) || 10;
 const siteNames = Object.keys(allSiteData);
 
 Promise
-  .all([createKuromojiTokenizer(), loadWord2vecModel(), DeeplearnModel.getInstance(new NodeCheckpointLoader('./ml/data/procedure-model/manifest.json'))])
+  .all([createKuromojiTokenizer(), loadWord2vecModel(), DeeplearnModel.getInstance(new NodeCheckpointLoader('./ml/data/procedure-model'))])
   .then<any>(([tokenizer, word2VecModel, deeplearnModel]) => siteNames.indexOf(siteNameOrURL) >= 0
     ? new Promise(async (resolve, reject) =>
       glob(`${path.resolve(__dirname, '../../recipes', siteNameOrURL)}/*.html`, async (err, files) => {

@@ -21,10 +21,10 @@ interface NodeData {
       score: number;
       name: string;
       quantity: string;
-    } | null;
+    };
     listOfPairs: {
       score: number;
-      pairs: { [name: string]: string; };
+      pairs: { name: string; quantity: string; }[];
     };
   };
   procedureSimilarity: {
@@ -32,6 +32,7 @@ interface NodeData {
     procedures: string[];
   }
   vectors: (number[] | undefined)[];
+  sumOfVectors?: number[];
 }
 function isElement(node: Node): node is Element {
   return node.nodeType === node.ELEMENT_NODE;
@@ -45,7 +46,7 @@ export async function infer(
   deeplearnModel: DeeplearnModel,
   document: Document,
   materialVector: { [key in 'name' | 'quantity']: number[]; },
-  materialStat: { [key in 'name' | 'quantity']: { [label in 'correct' | 'others']: { avg: number; sd: number; }; }; },
+  materialStat: { [key in 'name' | 'quantity']: { [label in 'correct' | 'others' | 'wordCounts']: { avg: number; sd: number; }; }; },
 ): Promise<{ materials: { [name: string]: string; }, procedures: string[] }> {
   const wordMemo: { [word: string]: { name: number; quantity: number; vector: number[] | undefined; } } = {};
   const calcMaterialScores = (vector: number[]) => ({
@@ -55,10 +56,10 @@ export async function infer(
   const calcProcedureScore = async (input: number[]) =>
     deeplearnModel.predict(input).then(output => (output - 0.5) * 2);
   let procedures: string[] = [];
-  let materials: { [name: string]: string; } = {};
+  let materials: { name: string; quantity: string; }[] = [];
   let maxProceduresScore = Number.NEGATIVE_INFINITY;
   let maxMaterialsScore = Number.NEGATIVE_INFINITY;
-  const zeroMaterialScore = { name: 0, quantity: 0 };
+  const zeroMaterialScore = { name: 0.5, quantity: 0.5 };
 
   async function visitNode(node: Node): Promise<NodeData | null> {
     if (!isElement(node) && !isText(node)) {
@@ -70,7 +71,8 @@ export async function infer(
       if (!normalizedTextContent) {
         return null;
       }
-      const scoresToCreatePairs: { name: number; quantity: number; textContent: string; count: 1 }[] = [];
+      const scoresToCreatePairs: { name: number; quantity: number; textContent: string; count: 1; }[] = [];
+      const truthyVectors: number[][] = [];
       result = tokenizer.tokenize(normalizedTextContent)
         .reduce((acc, word, i) => {
           word = word.trim();
@@ -84,6 +86,7 @@ export async function infer(
             wordMemo[word] = { name, quantity, vector };
           }
           const { name, quantity, vector } = wordMemo[word];
+          vector && truthyVectors.push(vector);
           scoresToCreatePairs.push({ name, quantity, textContent: word, count: 1 });
           return {
             textContent,
@@ -95,25 +98,29 @@ export async function infer(
               listOfPairs: materialSimilarity.listOfPairs,
             },
             procedureSimilarity,
-            vectors: vector ? [...vectors, vector] : vectors,
+            vectors: [...vectors, vector],
           }
         }, {
           textContent: normalizedTextContent,
           startsWithNumber: 0,
-          materialSimilarity: { name: 0, quantity: 0, pair: null, listOfPairs: { score: 0, pairs: {} } },
+          materialSimilarity: { name: 0, quantity: 0, pair: { score: 0, name: '', quantity: '' }, listOfPairs: { score: 0, pairs: [] } },
           procedureSimilarity: { score: -1, procedures: [] },
           vectors: []
         } as NodeData);
-      result.materialSimilarity.pair = createBestMaterialPair(scoresToCreatePairs);
-      if (result.materialSimilarity.pair) {
-        const { score, name, quantity } = result.materialSimilarity.pair;
-        result.materialSimilarity.listOfPairs = { score, pairs: { [name]: quantity } };
+      result.materialSimilarity.pair = calcMaterialScoreAndPair(scoresToCreatePairs);
+      const { score, name, quantity } = result.materialSimilarity.pair;
+      result.materialSimilarity.listOfPairs = { score, pairs: [{ name, quantity }] };
+      if (truthyVectors.length > 0) {
+        result.sumOfVectors = computeSumOfVectors(truthyVectors);
       }
     } else {
       const nodeDataList = (await Promise.all(Array.from(node.childNodes).map(visitNode))).filter(truthyFilter);
       const length = nodeDataList.length;
       if (length === 0) {
         return null;
+      }
+      if (length === 1) {
+        return nodeDataList[0];
       }
       const pair = createBestMaterialPairFromNodeDataList(nodeDataList);
       const listOfPairs = createBestListOfMaterialPairs(nodeDataList);
@@ -131,7 +138,10 @@ export async function infer(
             procedures: [...acc.procedureSimilarity.procedures, ...current.procedureSimilarity.procedures]
           },
           startsWithNumber: i === 1 ? acc.startsWithNumber : current.startsWithNumber,
-          vectors: [...acc.vectors, ...current.vectors]
+          vectors: [...acc.vectors, ...current.vectors],
+          sumOfVectors: acc.sumOfVectors && current.sumOfVectors
+            ? computeSumOfVectors([acc.sumOfVectors, current.sumOfVectors])
+            : (acc.sumOfVectors || current.sumOfVectors)
         }));
     }
     const length = result.vectors.length;
@@ -139,13 +149,12 @@ export async function infer(
       maxMaterialsScore = result.materialSimilarity.listOfPairs.score;
       materials = result.materialSimilarity.listOfPairs.pairs;
     }
-    if (isElement(node)) {
-      const truthyVectors = result.vectors.filter(truthyFilter);
-      const procedureScore = length && truthyVectors.length ? await calcProcedureScore([
+    if (length > 0 && result.sumOfVectors) {
+      const procedureScore = await calcProcedureScore([
         1 / length,
         result.startsWithNumber,
-        ...normalizeVector(computeSumOfVectors(truthyVectors))
-      ]) : 0;
+        ...normalizeVector(result.sumOfVectors)
+      ]);
       if (procedureScore >= result.procedureSimilarity.score) {
         result.procedureSimilarity.score = procedureScore;
         result.procedureSimilarity.procedures = [result.textContent];
@@ -158,84 +167,65 @@ export async function infer(
     return result;
   }
   function createBestMaterialPairFromNodeDataList(nodeDataList: NodeData[]): NodeData['materialSimilarity']['pair'] {
-    if (nodeDataList.length === 1) {
-      return nodeDataList[0].materialSimilarity.pair;
-    }
-    return createBestMaterialPair(nodeDataList.map(({ materialSimilarity, textContent, vectors }) =>
+    return calcMaterialScoreAndPair(nodeDataList.map(({ materialSimilarity, textContent, vectors }) =>
       ({ name: materialSimilarity.name, quantity: materialSimilarity.quantity, textContent, count: vectors.length })
     ));
-  }
-  function createBestMaterialPair(scores: { name: number; quantity: number; textContent: string; count: number; }[]): NodeData['materialSimilarity']['pair'] {
-    const length = scores.length;
-    if (length === 0) {
-      return null;
-    }
-    if (length === 1) {
-      const { name, quantity, textContent } = scores[0];
-      return { score: name + quantity - 1, name: name >= quantity ? textContent : '', quantity: name >= quantity ? '' : textContent };
-    }
-    let boundaryIndex = -1;
-    let simpleSum = Number.NEGATIVE_INFINITY, score = Number.NEGATIVE_INFINITY, name = '', quantity = '';
-    for (let i = 1; i < length; i++) {
-      let nameScore = 0, nameCount = 0, quantityScore = 0, quantityCount = 0;
-      for (let j = 0; j < length; j++) {
-        const { name, quantity, count } = scores[j];
-        if (j < i) {
-          nameScore += name;
-          nameCount += count;
-        } else {
-          quantityScore += quantity;
-          quantityCount += count;
-        }
-      }
-      const _simpleSum = nameScore + quantityScore;
-      const _score = (nameScore / nameCount) + (quantityScore / quantityCount);
-      // Compare simple sum as otherwise a word which is more similar to material name is used as material quantity (and vice versa) in some situation.
-      if (_simpleSum > simpleSum) {
-        simpleSum = _simpleSum;
-        score = _score;
-        boundaryIndex = i;
-      }
-    }
-    if (boundaryIndex < 0) {
-      return null;
-    }
-    for (let i = 0; i < length; i++) {
-      const { textContent } = scores[i];
-      if (i < boundaryIndex) {
-        name += textContent;
-      } else {
-        quantity += textContent;
-      }
-    }
-    return { score, name, quantity };
   }
   function createBestListOfMaterialPairs(nodeDataList: NodeData[]): NodeData['materialSimilarity']['listOfPairs'] {
     let scoreIfDirectChildrenArePairs = 0;
     let scoreIfDirectChildrenAreListOfPairs = 0;
     nodeDataList.forEach(({ materialSimilarity }) => {
-      scoreIfDirectChildrenArePairs += (materialSimilarity.pair ? materialSimilarity.pair.score : 0);
+      scoreIfDirectChildrenArePairs += materialSimilarity.pair.score;
       scoreIfDirectChildrenAreListOfPairs += materialSimilarity.listOfPairs.score;
     });
     return scoreIfDirectChildrenArePairs > scoreIfDirectChildrenAreListOfPairs
       ? {
         score: scoreIfDirectChildrenArePairs,
-        pairs: nodeDataList.reduce((acc, { materialSimilarity }) => {
-          if (materialSimilarity.pair) {
-            acc[materialSimilarity.pair.name] = materialSimilarity.pair.quantity;
-          }
-          return acc;
-        }, {} as { [name: string]: string; })
+        pairs: nodeDataList.map(({ materialSimilarity }) => materialSimilarity.pair)
       }
       : {
         score: scoreIfDirectChildrenAreListOfPairs,
         pairs: nodeDataList.reduce((acc, { materialSimilarity }) =>
-          ({ ...acc, ...materialSimilarity.listOfPairs.pairs })
-        , {} as { [name: string]: string; })
+          [...acc, ...materialSimilarity.listOfPairs.pairs]
+        , [] as { name: string; quantity: string; }[])
       };
   }
+  function calcMaterialScoreAndPair(scores: { name: number; quantity: number; textContent: string; count: number; }[]): NodeData['materialSimilarity']['pair'] {
+    const length = scores.length;
+    if (length === 0) {
+      return { score: 0, name: '', quantity: '' };
+    }
+    let boundaryIndex = -1;
+    let score = -1;
+    for (let i = 0; i <= length; i++) {
+      const { nameSimilarity, nameCount, quantitySimilarity, quantityCount } = scores.reduce(({ nameSimilarity, nameCount, quantitySimilarity, quantityCount }, current, j) => ({
+        nameSimilarity: j < i ? nameSimilarity + current.name : nameSimilarity,
+        nameCount: j < i ? nameCount + current.count : nameCount,
+        quantitySimilarity: j < i ? quantitySimilarity : quantitySimilarity + current.quantity,
+        quantityCount: j < i ? quantityCount : quantityCount + current.count,
+      }), { nameSimilarity: 0, nameCount: 0, quantitySimilarity: 0, quantityCount: 0 });
+      const nameScore = nameCount && (nameSimilarity / nameCount) * relativeDistribution(nameCount, materialStat.name.wordCounts.avg, materialStat.name.wordCounts.sd); // ranges from 0 to 1
+      const quantityScore = quantityCount && (quantitySimilarity / quantityCount) * relativeDistribution(quantityCount, materialStat.quantity.wordCounts.avg, materialStat.quantity.wordCounts.sd); // ranges from 0 to 1
+      const _totalScore = nameScore + quantityScore - 1; // ranges from -1 to 1
+      if (_totalScore >= score) {
+        score = _totalScore;
+        boundaryIndex = i;
+      }
+    }
+    return scores.reduce(({ score, name, quantity }, { textContent }, j) => ({
+      score,
+      name: j < boundaryIndex ? name + textContent : name,
+      quantity: j < boundaryIndex ? quantity : quantity + textContent
+    }), { score, name: '', quantity: '' });
+  }
 
-  return visitNode(document.body).then(() => ({ materials, procedures }));
+  return visitNode(document.body).then(() => ({
+    materials: materials.reduce((acc, { name, quantity }) => {
+      acc[name] = quantity;
+      return acc;
+    }, {} as { [name: string]: string; }),
+    procedures
+  }));
 }
 export function createProcedureInputVectorOfElement(tokenizer: TokenizerWrapper, model: Word2vecModel, element: Element): number[] | null {
   const normalizedTextContent = normalizeString((element.textContent || '').trim());
@@ -256,6 +246,5 @@ export function calcMaterialScore(vector: number[], targetVector: number[], stat
   const similarity = calcSimilarity(vector, targetVector);
   const relativeDistributionAsCorrect = relativeDistribution(similarity, stat.correct.avg, stat.correct.sd);
   const relativeDistributionAsOthers = relativeDistribution(similarity, stat.others.avg, stat.others.sd);
-  const score0to1 = relativeDistributionAsCorrect / (relativeDistributionAsCorrect + relativeDistributionAsOthers);
-  return (score0to1 - 0.5) * 2;
+  return relativeDistributionAsCorrect / (relativeDistributionAsCorrect + relativeDistributionAsOthers);
 }
