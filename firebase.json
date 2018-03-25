@@ -7,7 +7,7 @@
     "ignore": [
       "recipes/**",
       "**/node_modules/**",
-      "ml/data/keras-log/**",
+      "ml/data/tf-log/**",
       "ml/data/procedure-learning-data-input.json",
       "ml/data/procedure-learning-data-output.json",
       "ml/data/procedure-model.h5"

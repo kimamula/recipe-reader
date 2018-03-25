@@ -1,16 +1,16 @@
-import { getMaterialQuantity, longestCommonSubstringRatio } from './index';
+import { getMaterial, longestCommonSubstringRatio } from './index';
 
-describe('getMaterialQuantity', () => {
+describe('getMaterial', () => {
   it('should return corresponding quantity for the material', () =>
-    getMaterialQuantity({ '豚肉': '100g', 'キャベツ': '1/2個', '生姜': 'ひとかけ' }, '生姜', longestCommonSubstringRatio)
-      .then(result => expect(result).toBe('ひとかけ'))
+    getMaterial({ '豚肉': '100g', 'キャベツ': '1/2個', '生姜': 'ひとかけ' }, '生姜', longestCommonSubstringRatio)
+      .then(result => expect(result).toEqual({ name: '生姜', quantity: 'ひとかけ' }))
   );
   it('should return the best match quantity for the material if there is no material name that matches exactly to the argument', () =>
     Promise.all([
-      getMaterialQuantity({ '豚肉': '100g', 'キャベツ': '1/2個', '生姜': 'ひとかけ' }, 'ブタ肉', longestCommonSubstringRatio)
-        .then(result => expect(result).toBe('100g')),
-      getMaterialQuantity({ '100g100円の豚肉': '100g', '100g1000円の高級牛肉': '200g', 'キャベツ': '1/2個', '生姜': 'ひとかけ' }, '100g100円の高級牛肉', longestCommonSubstringRatio)
-        .then(result => expect(result).toBe('200g')),
+      getMaterial({ '豚肉': '100g', 'キャベツ': '1/2個', '生姜': 'ひとかけ' }, 'ブタ肉', longestCommonSubstringRatio)
+        .then(result => expect(result).toEqual({ 'name': '豚肉', 'quantity': '100g' })),
+      getMaterial({ '100g100円の豚肉': '100g', '100g1000円の高級牛肉': '200g', 'キャベツ': '1/2個', '生姜': 'ひとかけ' }, '100g100円の高級牛肉', longestCommonSubstringRatio)
+        .then(result => expect(result).toEqual({ 'name': '100g1000円の高級牛肉', 'quantity': '200g' })),
     ])
   );
 });

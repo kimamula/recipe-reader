@@ -132,24 +132,24 @@ export function executeInfer(app: App): any {
     });
 }
 
-export function getMaterialQuantity(materials: { [key: string]: string; }, name: string, matchScorer: (s1: string, s2: string) => number): Promise<string | undefined> {
+export function getMaterial(materials: { [key: string]: string; }, name: string, matchScorer: (s1: string, s2: string) => number): Promise<{ name: string; quantity: string; } | undefined> {
   if (materials[name]) {
-    return Promise.resolve(materials[name]);
+    return Promise.resolve({ name, quantity: materials[name] });
   }
   return createKuromojiTokenizer().then(({ tokenizer }) => {
     const argumentReading = tokenizer.tokenize(name).map(({ reading, surface_form }) => reading || surface_form).join('');
     const materialNames = Object.keys(materials);
-    let bestMatchQuantity: string | undefined;
+    let bestMatch: { name: string; quantity: string; } | undefined;
     let bestMatchScore = 0;
     for (const materialName of materialNames) {
       const materialNameReading = tokenizer.tokenize(materialName).map(({ reading, surface_form }) => reading || surface_form).join('');
       const matchScore = matchScorer(argumentReading, materialNameReading);
       if (matchScore > bestMatchScore) {
         bestMatchScore = matchScore;
-        bestMatchQuantity = materials[materialName];
+        bestMatch = { name: materialName, quantity: materials[materialName] };
       }
     }
-    return bestMatchQuantity;
+    return bestMatch;
   });
 }
 
@@ -190,15 +190,15 @@ export function material(app: App): void {
   }
   const materials = recipeContext.parameters[CONTEXT_ARGUMENT_MATERIALS] as { [key: string]: string; };
   if (materialName) {
-    getMaterialQuantity(materials, materialName, longestCommonSubstringRatio)
-      .then(quantity => {
-        if (quantity) {
+    getMaterial(materials, materialName, longestCommonSubstringRatio)
+      .then(material => {
+        if (material) {
           app.setContext(RECIPE_CONTEXT_NAME, RECIPE_CONTEXT_LIFESPAN, {
-            [CONTEXT_ARGUMENT_MATERIALS]: { ...materials, materialName: quantity }
+            [CONTEXT_ARGUMENT_MATERIALS]: { ...materials, [materialName]: material.quantity }
           });
-          app.ask(quantity);
+          app.ask(`${material.name} ${material.quantity}`);
         } else {
-          app.ask(`${materialName}は材料に存在しないか、対応する使用量の情報がありません。`);
+          app.ask(`申し訳ございません。${materialName}を材料から見つけることができませんでした。`);
         }
       });
   } else {
