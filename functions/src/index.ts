@@ -53,6 +53,10 @@ exports.recipeReader = functions.https.onRequest((request, response) => {
 function highlyLikelyMaterialName(materials: { [key: string]: string; }): string | undefined {
   const names = Object.keys(materials);
   for (const name of names) {
+    if (name === names[0]) {
+      // 1st entry of the materials is something like "材料（2人分）" and does not make sense as an example
+      continue;
+    }
     // entry whose name and quantity both exceed 2 characters is highly likely an actual material
     if (name.length > 1 && materials[name] && materials[name].length > 1) {
       return name;
