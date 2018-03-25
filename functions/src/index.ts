@@ -200,7 +200,7 @@ export function material(app: App): void {
           app.setContext(RECIPE_CONTEXT_NAME, RECIPE_CONTEXT_LIFESPAN, {
             [CONTEXT_ARGUMENT_MATERIALS]: { ...materials, [materialName]: material.quantity }
           });
-          app.ask(`${material.name} ${material.quantity}`);
+          app.ask(`${material.name}: ${material.quantity}`);
         } else {
           app.ask(`申し訳ございません。${materialName}を材料から見つけることができませんでした。`);
         }
