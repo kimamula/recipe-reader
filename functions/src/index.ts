@@ -221,22 +221,12 @@ function procedure(app: App): void {
       [CONTEXT_ARGUMENT_CURRENT_PROCEDURE]: Number(procedureNumber)
     });
     app.ask(procedures[Number(procedureNumber) - 1]);
+    return;
   }
-  app.ask(procedureNumber
-    ? `手順は1から${procedures.length}までの数字を指定してください。`
-    // TODO: Consider prefixing procedures with numbers
-    // Note that there are 3 types of sites;
-    // 1. All procedures are prefixed with numbers.
-    // 2. No procedures are prefixed with numbers.
-    // 3. Some procedures are prefixed with numbers, while others are not.
-    // To make things worse, some sites display numbers with images, in which case auto numbering may result in mismatching with the displayed numbers.
-    // And of course, sometimes a procedure begins with a number which does not indicate the order of the procedure,
-    // such as "100 cc の牛乳を加えてよく混ぜる。".
-    : procedures.join('\n')
-  );
+  app.ask(`手順は1から${procedures.length}までの数字を指定してください。`);
 }
 
-function relativeProcedure(app: App, diff?: number): void {
+function relativeProcedure(app: App, diff?: 1 | -1): void {
   const recipeContext = app.getContext(RECIPE_CONTEXT_NAME) as any;
   if (!recipeContext || !recipeContext.parameters[CONTEXT_ARGUMENT_PROCEDURES]) {
     app.ask(REQUEST_RECIPE_URL_MESSAGE);
