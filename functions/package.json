@@ -8,6 +8,7 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
+    "license": "node license",
     "test": "jest"
   },
   "main": "src/index.js",
