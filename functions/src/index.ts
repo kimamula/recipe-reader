@@ -32,7 +32,7 @@ const CONTEXT_ARGUMENT_CURRENT_PROCEDURE = 'currentProcedure';
 const REQUEST_RECIPE_URL_MESSAGE = 'はじめにレシピのURLを入力してください。';
 const CANCEL_MESSAGE = 'キャンセルしました。再度レシピのURLを入力してください。';
 
-exports.recipeReader = functions.https.onRequest((request, response) => {
+export const recipeReader = functions.https.onRequest((request, response) => {
   const app = new App({request, response});
 
   const actionMap = new Map();
@@ -64,7 +64,7 @@ function highlyLikelyMaterialName(materials: { [key: string]: string; }): string
 }
 
 const urlRegex = /^https?:\/\//;
-export function executeFetch(app: App): any {
+function executeFetch(app: App): any {
   const url = app.getArgument(URL_ARGUMENT) as any;
   if (!urlRegex.test(url)) {
     return app.ask('URL は HTTP または HTTPS から入力してください。');
@@ -89,7 +89,7 @@ function _fetch(app: App, url: string): any {
     });
 }
 
-export function executeInfer(app: App): any {
+function executeInfer(app: App): any {
   const recipeContext = app.getContext(RECIPE_CONTEXT_NAME) as any;
   if (!recipeContext || !recipeContext.parameters[CONTEXT_ARGUMENT_HTML]) {
     app.ask(REQUEST_RECIPE_URL_MESSAGE);
@@ -179,7 +179,7 @@ export function longestCommonSubstringRatio(s1: string, s2: string): number {
   return (longest * longest) / (s1Length * s2Length);
 }
 
-export function material(app: App): void {
+function material(app: App): void {
   const materialName = app.getArgument(MATERIAL_NAME_ARGUMENT) as any;
   if (urlRegex.test(materialName)) {
     // as the input for the material input is set to @sys.any, sometimes URL is wrongly navigated.
@@ -208,7 +208,7 @@ export function material(app: App): void {
   }
 }
 
-export function procedure(app: App): void {
+function procedure(app: App): void {
   const recipeContext = app.getContext(RECIPE_CONTEXT_NAME) as any;
   if (!recipeContext || !recipeContext.parameters[CONTEXT_ARGUMENT_PROCEDURES]) {
     app.ask(REQUEST_RECIPE_URL_MESSAGE);
@@ -236,7 +236,7 @@ export function procedure(app: App): void {
   );
 }
 
-export function relativeProcedure(app: App, diff?: number): void {
+function relativeProcedure(app: App, diff?: number): void {
   const recipeContext = app.getContext(RECIPE_CONTEXT_NAME) as any;
   if (!recipeContext || !recipeContext.parameters[CONTEXT_ARGUMENT_PROCEDURES]) {
     app.ask(REQUEST_RECIPE_URL_MESSAGE);
