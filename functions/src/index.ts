@@ -17,6 +17,7 @@ const MATERIAL_ACTION = 'material';
 const MATERIAL_NAME_ARGUMENT = 'name';
 
 const PROCEDURE_ACTION = 'procedure';
+const ALL_PROCEDURES_ACTION = 'procedure.all';
 const NEXT_PROCEDURE_ACTION = 'procedure.next';
 const PREVIOUS_PROCEDURE_ACTION = 'procedure.previous';
 const CURRENT_PROCEDURE_ACTION = 'procedure.current';
@@ -40,6 +41,7 @@ export const recipeReader = functions.https.onRequest((request, response) => {
   actionMap.set(INFER_ACTION, executeInfer);
   actionMap.set(MATERIAL_ACTION, material);
   actionMap.set(PROCEDURE_ACTION, procedure);
+  actionMap.set(ALL_PROCEDURES_ACTION, allProcedures);
   actionMap.set(CURRENT_PROCEDURE_ACTION, (app: App) => relativeProcedure(app));
   actionMap.set(PREVIOUS_PROCEDURE_ACTION, (app: App) => relativeProcedure(app, -1));
   actionMap.set(NEXT_PROCEDURE_ACTION, (app: App) => relativeProcedure(app, 1));
@@ -206,6 +208,25 @@ function material(app: App): void {
   } else {
     app.ask(Object.keys(materials).map(key => `${key}: ${materials[key]}`).join('\n'));
   }
+}
+
+function allProcedures(app: App): void {
+  const recipeContext = app.getContext(RECIPE_CONTEXT_NAME) as any;
+  if (!recipeContext || !recipeContext.parameters[CONTEXT_ARGUMENT_PROCEDURES]) {
+    app.ask(REQUEST_RECIPE_URL_MESSAGE);
+    return;
+  }
+  app.ask(
+    // TODO: Consider prefixing procedures with numbers
+    // Note that there are 3 types of sites;
+    // 1. All procedures are prefixed with numbers.
+    // 2. No procedures are prefixed with numbers.
+    // 3. Some procedures are prefixed with numbers, while others are not.
+    // To make things worse, some sites display numbers with images, in which case auto numbering may result in mismatching with the displayed numbers.
+    // And of course, sometimes a procedure begins with a number which does not indicate the order of the procedure,
+    // such as "100 cc の牛乳を加えてよく混ぜる。".
+    (recipeContext.parameters[CONTEXT_ARGUMENT_PROCEDURES] as string[]).join('\n')
+  );
 }
 
 function procedure(app: App): void {
