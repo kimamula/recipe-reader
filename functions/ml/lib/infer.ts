@@ -5,6 +5,8 @@ import { calcSimilarity, computeSumOfVectors, dummyVector, getVector, normalizeV
 import { normalizeString } from './normalize';
 
 const startsWithNumberRegex = /^\d/;
+const excludeAsProcedureRegExp = /^((作|つく)り方|手順)$/;
+const excludeAsMaterialRegExp =/^材料(\s*[(|（][^)|）]+[)|）])?$/;
 
 export interface ProcedureLeaningData {
   input: number[][];
@@ -149,7 +151,7 @@ export async function infer(
       maxMaterialsScore = result.materialSimilarity.listOfPairs.score;
       materials = result.materialSimilarity.listOfPairs.pairs;
     }
-    if (length > 0 && result.sumOfVectors) {
+    if (length > 0 && result.sumOfVectors && !excludeAsProcedureRegExp.test(result.textContent)) {
       const procedureScore = await calcProcedureScore([
         1 / length,
         result.startsWithNumber,
@@ -192,7 +194,7 @@ export async function infer(
   }
   function calcMaterialScoreAndPair(scores: { name: number; quantity: number; textContent: string; count: number; }[]): NodeData['materialSimilarity']['pair'] {
     const length = scores.length;
-    if (length === 0) {
+    if (length === 0 || excludeAsMaterialRegExp.test(scores.map(({ textContent }) => textContent).join(''))) {
       return { score: 0, name: '', quantity: '' };
     }
     let boundaryIndex = -1;
