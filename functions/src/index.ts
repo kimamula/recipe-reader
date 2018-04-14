@@ -193,16 +193,10 @@ function material(app: App): void {
   const materials = recipeContext.parameters[CONTEXT_ARGUMENT_MATERIALS] as { [key: string]: string; };
   if (materialName) {
     getMaterial(materials, materialName, longestCommonSubstringRatio)
-      .then(material => {
-        if (material) {
-          app.setContext(RECIPE_CONTEXT_NAME, RECIPE_CONTEXT_LIFESPAN, {
-            [CONTEXT_ARGUMENT_MATERIALS]: { ...materials, [materialName]: material.quantity }
-          });
-          app.ask(`${material.name}: ${material.quantity}`);
-        } else {
-          app.ask(`申し訳ございません。${materialName}を材料から見つけることができませんでした。`);
-        }
-      });
+      .then(material => app.ask(material
+        ? `${material.name}: ${material.quantity}`
+        : `申し訳ございません。${materialName}を材料から見つけることができませんでした。`
+      ));
   } else {
     app.ask(Object.keys(materials).map(key => `${key}: ${materials[key]}`).join('\n'));
   }
